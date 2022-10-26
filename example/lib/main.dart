@@ -99,7 +99,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 screenshotController
                     .capture(delay: Duration(milliseconds: 10))
                     .then((capturedImage) async {
-                  ShowCapturedWidget(context, capturedImage!);
+                  ShowCapturedWidget(context, capturedImage);
                 }).catchError((onError) {
                   print(onError);
                 });
@@ -153,9 +153,8 @@ class _MyHomePageState extends State<MyHomePage> {
           title: Text("Captured widget screenshot"),
         ),
         body: Center(
-            child: capturedImage != null
-                ? Image.memory(capturedImage)
-                : Container()),
+          child: Image.memory(capturedImage),
+        ),
       ),
     );
   }

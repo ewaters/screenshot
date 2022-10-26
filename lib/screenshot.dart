@@ -9,7 +9,6 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/widgets.dart';
 
 import 'src/platform_specific/file_manager/file_manager.dart';
 
@@ -26,62 +25,60 @@ class ScreenshotController {
   }
 
   /// Captures image and saves to given path
-  Future<String?> captureAndSave(
+  Future<String> captureAndSave(
     String directory, {
     String? fileName,
     double? pixelRatio,
     Duration delay = const Duration(milliseconds: 20),
   }) async {
-    Uint8List? content = await capture(
+    Uint8List content = await capture(
       pixelRatio: pixelRatio,
       delay: delay,
     );
     PlatformFileManager fileManager = PlatformFileManager();
 
-    return fileManager.saveFile(content!, directory, name: fileName);
+    return fileManager.saveFile(content, directory, name: fileName);
   }
 
-  Future<Uint8List?> capture({
+  Future<Uint8List> capture({
     double? pixelRatio,
     Duration delay = const Duration(milliseconds: 20),
   }) {
-    //Delay is required. See Issue https://github.com/flutter/flutter/issues/22308
-    return new Future.delayed(delay, () async {
-      try {
-        ui.Image? image = await captureAsUiImage(
-          delay: Duration.zero,
-          pixelRatio: pixelRatio,
-        );
-        ByteData? byteData =
-            await image?.toByteData(format: ui.ImageByteFormat.png);
-        image?.dispose();
-
-        Uint8List? pngBytes = byteData?.buffer.asUint8List();
-
-        return pngBytes;
-      } catch (Exception) {
-        throw (Exception);
+    // Delay is required. See Issue https://github.com/flutter/flutter/issues/22308
+    return Future.delayed(delay, () async {
+      ui.Image image = await captureAsUiImage(
+        delay: Duration.zero,
+        pixelRatio: pixelRatio,
+      );
+      ByteData? byteData =
+          await image.toByteData(format: ui.ImageByteFormat.png);
+      image.dispose();
+      if (byteData == null) {
+        throw 'Failed to convert image to byte data';
       }
+
+      return byteData.buffer.asUint8List();
     });
   }
 
-  Future<ui.Image?> captureAsUiImage(
-      {double? pixelRatio: 1,
-      Duration delay: const Duration(milliseconds: 20)}) {
+  Future<ui.Image> captureAsUiImage(
+      {double? pixelRatio = 1,
+      Duration delay = const Duration(milliseconds: 20)}) {
     //Delay is required. See Issue https://github.com/flutter/flutter/issues/22308
-    return new Future.delayed(delay, () async {
+    return Future.delayed(delay, () async {
       try {
-        var findRenderObject =
-            this._containerKey.currentContext?.findRenderObject();
+        final context = this._containerKey.currentContext;
+        if (context == null) {
+          throw 'No context found';
+        }
+        final findRenderObject = context.findRenderObject();
         if (findRenderObject == null) {
-          return null;
+          throw 'BuildContext.findRenderObject() failed to find anything';
         }
         RenderRepaintBoundary boundary =
             findRenderObject as RenderRepaintBoundary;
-        BuildContext? context = _containerKey.currentContext;
         if (pixelRatio == null) {
-          if (context != null)
-            pixelRatio = pixelRatio ?? MediaQuery.of(context).devicePixelRatio;
+          pixelRatio = pixelRatio ?? MediaQuery.of(context).devicePixelRatio;
         }
         ui.Image image = await boundary.toImage(pixelRatio: pixelRatio ?? 1);
         return image;
@@ -100,7 +97,7 @@ class ScreenshotController {
   ///
   Future<Uint8List> captureFromWidget(
     Widget widget, {
-    Duration delay: const Duration(seconds: 1),
+    Duration delay = const Duration(seconds: 1),
     double? pixelRatio,
     BuildContext? context,
     Size? targetSize,
@@ -119,7 +116,7 @@ class ScreenshotController {
 
   static Future<ui.Image> widgetToUiImage(
     Widget widget, {
-    Duration delay: const Duration(seconds: 1),
+    Duration delay = const Duration(seconds: 1),
     double? pixelRatio,
     BuildContext? context,
     Size? targetSize,
@@ -263,7 +260,7 @@ class Screenshot<T> extends StatefulWidget {
 
   @override
   State<Screenshot> createState() {
-    return new ScreenshotState();
+    return ScreenshotState();
   }
 }
 
