@@ -64,34 +64,30 @@ class ScreenshotController {
   Future<ui.Image> captureAsUiImage(
       {double? pixelRatio = 1,
       Duration delay = const Duration(milliseconds: 20)}) {
-    //Delay is required. See Issue https://github.com/flutter/flutter/issues/22308
+    // Delay is required. See Issue https://github.com/flutter/flutter/issues/22308
     return Future.delayed(delay, () async {
-      try {
-        final context = this._containerKey.currentContext;
-        if (context == null) {
-          throw 'No context found';
-        }
-        final findRenderObject = context.findRenderObject();
-        if (findRenderObject == null) {
-          throw 'BuildContext.findRenderObject() failed to find anything';
-        }
-        RenderRepaintBoundary boundary =
-            findRenderObject as RenderRepaintBoundary;
-        if (pixelRatio == null) {
-          pixelRatio = pixelRatio ?? MediaQuery.of(context).devicePixelRatio;
-        }
-        ui.Image image = await boundary.toImage(pixelRatio: pixelRatio ?? 1);
-        return image;
-      } catch (Exception) {
-        throw (Exception);
+      final context = this._containerKey.currentContext;
+      if (context == null) {
+        throw 'No context found. This likely means the ScreenshotController'
+            ' is no longer in the Widget tree.';
       }
+      final findRenderObject = context.findRenderObject();
+      if (findRenderObject == null) {
+        throw 'BuildContext.findRenderObject() failed to find anything';
+      }
+      RenderRepaintBoundary boundary =
+          findRenderObject as RenderRepaintBoundary;
+      if (pixelRatio == null) {
+        pixelRatio = pixelRatio ?? MediaQuery.of(context).devicePixelRatio;
+      }
+      return await boundary.toImage(pixelRatio: pixelRatio ?? 1);
     });
   }
 
   ///
   /// Value for [delay] should increase with widget tree size. Prefered value is 1 seconds
   ///
-  ///[context] parameter is used to Inherit App Theme and MediaQuery data.
+  /// [context] parameter is used to Inherit App Theme and MediaQuery data.
   ///
   ///
   ///
